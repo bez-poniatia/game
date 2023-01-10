@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #field {
+            max-width: 700px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .tile {
+            width: 100px;
+            height: 100px;
+            background-color: grey;
+            border-radius: 10px;
+            margin: 10px;
+        }
+
+        .cont {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        button {
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            background-color: gray;
+            cursor: pointer;
+        }
+
+        .button-active {
+            background-color: green;
+            font-weight: bolder;
+        }
+
+        .rec-line {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .rec-line div {
+            padding: 10px 20px;
+        }
+        #lead{
+            background-color:green;
+            border-radius: 10px;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cont">
+        <div id="field">
+        </div>
+        <div id="panel">
+            <button class="button-active" onclick="changeDif(10)">Просто</button>
+            <button onclick="changeDif(7)">Средне</button>
+            <button onclick="changeDif(4)">Сложно</button>
+            <div>
+                points: <div id="points"></div>
+            </div>
+        </div>
+        <div id="lead">
+            <div>
+                Таблица рекордов: <span id="maxRes"></span>
+            </div>
+            <div id="results">
+
+            </div>
+        </div>
+    </div>
+    <script>
+        askname()
+        let field = document.getElementById('field');
+        let min = 0;
+        let max = 10;
+        let points = 0;
+        render()
+        rendRecords()
+        function render() {
+            field.innerHTML = '';
+            for (let i = 0; i < 25; i++) {
+                let number = Math.floor(Math.random() * (max - min)) + min;
+                field.innerHTML += `
+                        <div onclick='checkBomb()' class='tile' has-bomb='${number}'>
+                        </div>
+                    `
+            }
+        }
+        function checkBomb() {
+            if (event.target.getAttribute('has-bomb') == 0) {
+                let tile = document.querySelectorAll('.tile')
+                for (let i = 0; i < tile.length; i++) {
+                    if (tile[i].getAttribute('has-bomb') == 0) {
+                        tile[i].style.backgroundColor = 'red';
+                    }
+                }
+
+                if (points > localStorage.getItem('maxRes')) {
+                    localStorage.setItem('maxRes', points);
+                }
+
+                let results = []
+                if (points != 0) {
+                    if (localStorage.getItem('results') != null) {
+                        results = JSON.parse(localStorage.getItem('results'))
+                    }
+                    let newGameRes = {
+                        name : username,
+                        "points" : points,
+                        time : "12:21"
+                    }
+
+                    results.push(newGameRes);
+
+                    results.sort(function (a, b) {
+                        if (a.points < b.points) {
+                            return 1;
+                        }
+                        if (a.points > b.points) {
+                            return -1;
+                        }
+                        return 0
+                    })
+                    let str = JSON.stringify(results)
+                    localStorage.setItem('results', str)
+                }
+
+                if (confirm('Game over')) {
+                    render()
+                    rendRecords()
+                    points = 0;
+                    document.getElementById('points').innerHTML = 0;
+                }
+            } else {
+                if (!event.target.getAttribute('checked')) {
+                    event.target.style.backgroundColor = 'limegreen';
+                    event.target.setAttribute('checked', '1')
+                    points = points + Math.floor(100 / max)
+                    document.getElementById('points').innerHTML = points;
+                }
+            }
+        }
+        function changeDif(maxNum) {
+            max = maxNum;
+            points = 0;
+            document.getElementById('points').innerHTML = 0;
+            document.querySelector('.button-active').classList.remove('button-active');
+            render()
+            event.target.classList.add('button-active');
+        }
+        function rendRecords() {
+            let maxRes = localStorage.getItem('maxRes');
+            document.getElementById('maxRes').innerHTML = maxRes;
+
+            let maxResJSON = localStorage.getItem('results');
+
+            let results = []
+            if (maxResJSON != null) {
+                results = JSON.parse(maxResJSON);
+            }
+
+            let board = document.getElementById('results');
+            board.innerHTML = '';
+            for (let i = 0; i < results.length; i++) {
+                board.innerHTML += `
+                    <div class='rec-line'>
+                        <div>
+                            ${results[i]["name"]}
+                        </div>
+                        <div>
+                            ${results[i]["points"]}
+                        </div>
+                        <div>
+                            ${results[i]["time"]}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        function askname(){
+            let name = prompt("Введите имя:")
+            if( name != ''){
+                username = name
+            }
+        }
+        
+    </script>
+</body>
+
+</html>
